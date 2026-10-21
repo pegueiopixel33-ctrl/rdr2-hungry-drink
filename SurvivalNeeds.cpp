@@ -6,6 +6,9 @@
 //  AVISO: os hashes de natives mudam entre versões do jogo.
 //  Confira os marcados com [CONFIRMAR] em https://alloc8or.re/rdr3/nativedb/
 // ============================================================
+#include <windows.h>
+#include "types.h"     // do SDK do ScriptHookRDR2
+#include "natives.h"   // do SDK do ScriptHookRDR2
 #include "main.h"      // do SDK do ScriptHookRDR2
 #include <string>
 #include <fstream>
