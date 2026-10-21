@@ -6,6 +6,7 @@
 //  AVISO: os hashes de natives mudam entre versões do jogo.
 //  Confira os marcados com [CONFIRMAR] em https://alloc8or.re/rdr3/nativedb/
 // ============================================================
+#define NOMINMAX
 #include <windows.h>
 #include "types.h"     // do SDK do ScriptHookRDR2
 #include "natives.h"   // do SDK do ScriptHookRDR2
@@ -30,7 +31,7 @@ struct Config {
 // Os nomes são hashados com joaat. [CONFIRMAR] os nomes exatos no
 // banco de itens (ex.: consumable_*), cada versão pode variar.
 struct Effect { float hunger; float thirst; };
-static std::map<std::string, Effect> ITEMS = {
+static std::map<std::string, Effect> FOOD_TABLE = {
     // ---------- COMIDAS (fome, sede) ----------
     // Nomes candidatos: se algum nao existir no jogo, e ignorado sem problema.
     {"CONSUMABLE_BREAD",            { 18.f,  0.f}},
@@ -70,6 +71,20 @@ static std::map<std::string, Effect> ITEMS = {
     {"CONSUMABLE_ABSINTHE",         {  0.f,  8.f}},
     {"CONSUMABLE_TONIC",            {  0.f,  8.f}},
 };
+
+// ------------------ HASH (joaat) ------------------
+static Hash Joaat(const std::string& str) {
+    unsigned int h = 0;
+    for (char c : str) {
+        h += (unsigned char)tolower((unsigned char)c);
+        h += (h << 10);
+        h ^= (h >> 6);
+    }
+    h += (h << 3);
+    h ^= (h >> 11);
+    h += (h << 15);
+    return (Hash)h;
+}
 
 // ------------------ ESTADO ------------------
 static float g_hunger = 80.f;   // 0..100
@@ -124,9 +139,10 @@ static void DrawHud() {
 
 // ------------------ LÓGICA ------------------
 static float ActivityMultiplier(Ped ped) {
-    if (PED::IS_PED_ON_MOUNT(ped))       return CFG.rideMultiplier;
-    if (PED::IS_PED_SPRINTING(ped))      return CFG.sprintMultiplier;
-    if (PED::IS_PED_RUNNING(ped))        return CFG.runMultiplier;
+    if (PED::IS_PED_ON_MOUNT(ped)) return CFG.rideMultiplier;
+    float speed = ENTITY::GET_ENTITY_SPEED(ped);   // metros por segundo
+    if (speed > 5.5f) return CFG.sprintMultiplier;
+    if (speed > 2.8f) return CFG.runMultiplier;
     return 1.0f;
 }
 
@@ -144,8 +160,8 @@ static void OnConsumed(const Effect& e) {
 // o jogador usou/comeu/bebeu aquele item (funciona para itens
 // do inventário e para bebidas compradas no saloon que entram nele).
 static void CheckConsumption() {
-    for (auto& [name, effect] : ITEMS) {
-        Hash h = MISC::GET_HASH_KEY(name.c_str());
+    for (auto& [name, effect] : FOOD_TABLE) {
+        Hash h = Joaat(name);
         int now = GetItemCount(h);
         auto it = g_lastCount.find(h);
         if (it != g_lastCount.end() && now < it->second)
