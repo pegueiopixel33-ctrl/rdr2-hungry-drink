@@ -178,11 +178,9 @@ void ScriptMain() {
         float dt = (nowT - last) / 1000.f;
         last = nowT;
 
-        if (!HUD::IS_PAUSE_MENU_ACTIVE() && !CAM::IS_SCREEN_FADED_OUT()) {
-            Tick(dt);
-            CheckConsumption();
-            DrawHud();
-        }
+        Tick(dt);
+        CheckConsumption();
+        DrawHud();
 
         saveTimer += dt;
         if (saveTimer >= CFG.saveEverySec) { Save(); saveTimer = 0.f; }
