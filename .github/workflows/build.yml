@@ -1,0 +1,17 @@
+name: build
+on:
+  push:
+  workflow_dispatch:
+jobs:
+  build:
+    runs-on: windows-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: ilammy/msvc-dev-cmd@v1
+      - name: Compilar
+        shell: cmd
+        run: cl /nologo /LD /EHsc /std:c++17 /O2 /I sdk\inc SurvivalNeeds.cpp dllmain.cpp sdk\lib\ScriptHookRDR2.lib user32.lib /Fe:SurvivalNeeds.asi
+      - uses: actions/upload-artifact@v4
+        with:
+          name: SurvivalNeeds
+          path: SurvivalNeeds.asi
